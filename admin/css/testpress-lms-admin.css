@@ -2,3 +2,11 @@
  * All of the CSS for your admin-specific functionality should be
  * included in this file.
  */
+
+.wp-post-image{
+    display: block;
+    width: auto;
+    max-width: 3%;
+    margin-right: auto;
+    margin-top: calc(2 * var(--global--spacing-vertical));
+}
