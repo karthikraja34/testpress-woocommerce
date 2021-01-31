@@ -156,8 +156,11 @@ class Testpress_Lms {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+		$this->loader->add_action( 'admin_post_product_form_response', $plugin_admin, 'the_form_response');
 
 	}
+
+
 
 	/**
 	 * Register all of the hooks related to the public-facing functionality
