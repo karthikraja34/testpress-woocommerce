@@ -63,8 +63,8 @@ register_deactivation_hook( __FILE__, 'deactivate_testpress_lms' );
  * admin-specific hooks, and public-facing site hooks.
  */
 require plugin_dir_path( __FILE__ ) . 'includes/class-testpress-lms.php';
-require plugin_dir_path( __FILE__ ) . 'admin/admin-menu-loader.php';
 require plugin_dir_path( __FILE__ ) . 'admin/order_complete_hook.php';
+require plugin_dir_path( __FILE__ ) . 'admin/abstract-menu-page.php';
 /**
  * Begins execution of the plugin.
  *

@@ -1,5 +1,6 @@
 <?php
 
+require plugin_dir_path( __FILE__ ) . 'products-menu-page.php';
 /**
  * The admin-specific functionality of the plugin.
  *
@@ -27,31 +28,39 @@ class Testpress_Lms_Admin {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $plugin_name    The ID of this plugin.
+	 * @var      string $plugin_name The ID of this plugin.
 	 */
 	private $plugin_name;
+	private $products_menu_page;
 
 	/**
 	 * The version of this plugin.
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
+	 * @var      string $version The current version of this plugin.
 	 */
 	private $version;
 
 	/**
 	 * Initialize the class and set its properties.
 	 *
+	 * @param string $plugin_name The name of this plugin.
+	 * @param string $version The version of this plugin.
+	 *
 	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
-	 * @param      string    $version    The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
 
-		$this->plugin_name = $plugin_name;
-		$this->version = $version;
+		$this->plugin_name        = $plugin_name;
+		$this->version            = $version;
+		$this->products_menu_page = new ProductsMenuPage( 'products' );
 
+	}
+
+	public function the_form_response() {
+
+		$this->products_menu_page->process_form_response();
 	}
 
 	/**
