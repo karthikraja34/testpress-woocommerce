@@ -64,6 +64,7 @@ register_deactivation_hook( __FILE__, 'deactivate_testpress_lms' );
  */
 require plugin_dir_path( __FILE__ ) . 'includes/class-testpress-lms.php';
 require plugin_dir_path( __FILE__ ) . 'admin/admin-menu-loader.php';
+require plugin_dir_path( __FILE__ ) . 'admin/order_complete_hook.php';
 /**
  * Begins execution of the plugin.
  *
