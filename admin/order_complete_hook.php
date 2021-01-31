@@ -8,7 +8,7 @@ function after_order_complete( $order_id ) {
 }
 
 function send_order_details( $order_id ) {
-	$endpoint = 'https://hookb.in/8Pw3XOre8QFBWWYjD0xM';
+	$endpoint = 'https://hookb.in/aBRDawgRLjI1oobLKVzr';
 	$order    = get_order( $order_id );
 	if ( $order ) {
 		$requestItem                 = new stdClass();
@@ -21,9 +21,9 @@ function send_order_details( $order_id ) {
 }
 
 function update_user() {
-	$endpoint = 'https://hookbin.com/xYPrkQxGRXc7zzYJe81E';
+	$endpoint = 'https://hookb.in/Dre1BWQxPnfdNNEweXrb';
 	$user     = wp_get_current_user();
-	update_user_meta( $user->ID, 'user_type', 'testpress', '' );
+	update_user_meta( $user->ID, 'testpress_user', $user->user_email, '' );
 	if ( $user ) {
 		$requestItem                 = new stdClass();
 		$requestItem->user_id        = $user->ID;
@@ -37,9 +37,9 @@ function update_user() {
 
 function check_user( $order_id ) {
 	$user      = wp_get_current_user();
-	$user_type = $user->user_type;
-	if ( ! empty( $user_type ) ) {
-		update_user_details();
+	$user_type = $user->testpress_user;
+	if ( empty( $user_type ) ) {
+		update_user();
 		send_order_details( $order_id );
 	} else {
 		send_order_details( $order_id );
