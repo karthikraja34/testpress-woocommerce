@@ -41,6 +41,14 @@ class Testpress_Lms_Admin {
 	 * @var      string $version The current version of this plugin.
 	 */
 	private $version;
+	/**
+	 * @var LoginPage
+	 */
+	private $login_page;
+	/**
+	 * @var DemoPage
+	 */
+	private $demo_page;
 
 	/**
 	 * Initialize the class and set its properties.
@@ -54,15 +62,20 @@ class Testpress_Lms_Admin {
 
 		$this->plugin_name        = $plugin_name;
 		$this->version            = $version;
-		$this->products_menu_page = new ProductsMenuPage( 'products' );
-
+		$this->load_dependencies();
 	}
 
-	public function the_form_response() {
-
-		$this->products_menu_page->process_form_response();
+	private function load_dependencies() {
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-login-page.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-demo-page.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-users-page.php';
 	}
 
+	function just_add_cors_http_header($headers){
+		$headers['Access-Control-Allow-Origin'] = '*';
+
+		return $headers;
+	}
 	/**
 	 * Register the stylesheets for the admin area.
 	 *
@@ -83,8 +96,11 @@ class Testpress_Lms_Admin {
 		 */
 
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/testpress-lms-admin.css', array(), $this->version, 'all' );
-
+		wp_enqueue_style( 'select2_css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css' );
+		wp_register_script( 'select2_js', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js', array('jquery'), '4.0.3', true );
+		wp_enqueue_script('select2_js');
 	}
+
 
 	/**
 	 * Register the JavaScript for the admin area.
@@ -107,6 +123,26 @@ class Testpress_Lms_Admin {
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/testpress-lms-admin.js', array( 'jquery' ), $this->version, false );
 
+	}
+
+	public function initializeAdminPages() {
+		if ( !$this->is_logged_in() ) {
+			$this->login_page = new LoginPage( 'testpress-lms', $this->plugin_name );
+			add_action( 'admin_post_nds_form_response', array( $this->login_page, 'the_form_response' ) );
+		} else {
+			$this->products_menu_page = new ProductsMenuPage( 'products');
+			$this->users_page = new UsersPage( 'users', ["parent_menu" => "products"]);
+			$this->demo_page  = new DemoPage( 'settings', ["parent_menu" => "products"]);
+			add_action( 'wp_ajax_mishagetposts', array( $this->login_page, 'rudr_get_posts_ajax_callback' ) );
+		}
+	}
+
+	public function is_logged_in() {
+		return get_option( 'testpress_auth_token' );
+	}
+
+	public function process_login_form_response() {
+		$this->login_page->the_form_response();
 	}
 
 }

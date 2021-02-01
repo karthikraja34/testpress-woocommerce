@@ -55,6 +55,24 @@ class Testpress_Lms_Public {
 	}
 
 	/**
+	 * Add a login link to the members navigation
+	 */
+	function add_logout_link( $items, $args )
+	{
+		if ( !is_user_logged_in() && $args->theme_location == 'primary' ) {
+			$items .= '<li><a href="'. site_url('wp-login.php') .'">Log In123</a></li>';
+		} else {
+			$query_string = "email=". get_user_meta(get_current_user_id(), "testpress_username") . "&time=". time();
+			$payload = base64_encode($query_string);
+			$secret_key = get_option("testpress_secret");
+			$sig = hash_hmac('sha256', $payload, $secret_key);
+			$sso_url = get_option("testpress_base_url") ."/sso_login/?sig=". $sig . "&sso=.". $payload;
+			$items .= '<li><a href="'. $sso_url .'">Testpress</a></li>';
+		}
+		return $items;
+	}
+
+	/**
 	 * Register the stylesheets for the public-facing side of the site.
 	 *
 	 * @since    1.0.0

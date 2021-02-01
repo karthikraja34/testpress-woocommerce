@@ -30,7 +30,8 @@ class Testpress_Lms_Deactivator {
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
-
+		delete_option("testpress_base_url");
+		delete_option("testpress_auth_token");
 	}
 
 }

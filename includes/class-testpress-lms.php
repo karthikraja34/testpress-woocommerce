@@ -156,9 +156,15 @@ class Testpress_Lms {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+		$this->loader->add_action( 'wp_headers', $plugin_admin, 'just_add_cors_http_header' );
+		$plugin_admin->initializeAdminPages();
 		$this->loader->add_action( 'admin_post_product_form_response', $plugin_admin, 'the_form_response');
+        $this->loader->add_action( 'admin_post_nds_form_response', $plugin_admin, 'process_login_form_response');
+        $this->loader->add_action( 'admin_post_nds_form_response', $plugin_admin, 'process_login_form_response');
+        $this->loader->add_action( 'admin_post_nds_form_response', $plugin_admin, 'process_login_form_response');
 
 	}
+
 
 
 
@@ -175,8 +181,13 @@ class Testpress_Lms {
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+		$this->loader->add_filter( 'wp_nav_menu_items', $plugin_public, 'add_logout_link', 10, 2);
+
 
 	}
+
+
+
 
 	/**
 	 * Run the loader to execute all of the hooks with WordPress.

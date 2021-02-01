@@ -33,7 +33,8 @@ abstract class AbstractMenuPage extends AdminPage {
 			'order'      => 30,
 			'page_title' => $this->name,
 			'menu_title' => $this->name,
-			'capability' => 'manage_options'
+			'capability' => 'manage_options',
+			'parent_menu' => null
 		);
 
 		$atts = array_merge( $defaults, $atts );
