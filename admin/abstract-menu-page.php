@@ -53,6 +53,7 @@ abstract class AbstractMenuPage extends AdminPage {
 		add_action( 'admin_menu', array( $this, 'createMenu' ), $this->order );
 	}
 
+
 	public function createMenu() {
 		//add_menu_page('Test','TestPlugin','manage_options','test-admin-menu',array( $this, 'render' ),'dashicons-cart',4);
 		if ( $this->parentMenu ) {
@@ -63,10 +64,14 @@ abstract class AbstractMenuPage extends AdminPage {
 		} else {
 			//add_menu_page('Test','TestPlugin','manage_options','test-admin-menu',array( $this, 'render' ),'dashicons-cart',4);
 
-			$hook = add_menu_page( $this->getPageTitle(), $this->getMenuTitle(), $this->capability, $this->name, array(
+			$hook = add_menu_page( "Testpress LMS","Testpress LMS", $this->capability, $this->name, array(
 				$this,
 				'render'
-			), null, $this->order );
+			), 'dashicons-clipboard', $this->order );
+			$hook = add_submenu_page( $this->name, $this->getPageTitle(), $this->getMenuTitle(), $this->capability, $this->name, array(
+				$this,
+				'render'
+			) );
 		}
 		$this->screenId = $hook;
 		add_action( 'load-' . $this->screenId, array( $this, 'onLoad' ) );

@@ -74,7 +74,25 @@ require plugin_dir_path( __FILE__ ) . 'admin/abstract-menu-page.php';
  *
  * @since    1.0.0
  */
+function wpse_remove_footer()
+{
+	add_filter( 'admin_footer_text',    '__return_false', 11 );
+	add_filter( 'update_footer',        '__return_false', 11 );
+}
+add_action( 'admin_init', 'wpse_remove_footer' );
 
+add_action('plugins_loaded', 'check_for_woocommerce');
+
+function general_admin_notice(){
+	echo '<div class="notice notice-error">
+         <p>Testpress LMS is enabled but not effective. It requires WooCommerce to work.</p>
+     </div>';
+}
+function check_for_woocommerce() {
+	if (!defined('WC_VERSION')) {
+		add_action('admin_notices', 'general_admin_notice');
+	}
+}
 
 function run_testpress_lms() {
 

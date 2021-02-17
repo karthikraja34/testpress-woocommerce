@@ -6,7 +6,8 @@
             text-align: center;
             white-space: nowrap;
         }
-         .column-thumb img {
+
+        .column-thumb img {
             margin: 0;
             width: auto;
             height: auto;
@@ -17,14 +18,7 @@
     </style>
 	<?php add_thickbox(); ?>
 
-    <div id="my-content-id" style="display:none;">
-        <p>
-            This is my hidden content! It will appear in ThickBox when the link is clicked.
-        </p>
-        <label for="rudr_select2_tags">Tags:</label><br />
-        <select class="courses" id="rudr_select2_tags" name="rudr_select2_tags[]" multiple="multiple" style="width:100%">
-        </select>
-    </div>
+
     <h2><?php esc_attr_e( 'Products', 'WpAdminStyle' ); ?></h2>
     <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" id="nds_add_user_meta_form">
 
@@ -34,59 +28,72 @@
         <table class="widefat wp-list-table">
             <thead>
             <tr>
-                <th scope="col" id="thumb" class="manage-column column-thumb"><span class="wc-image tips">Image</span></th>
+                <th scope="col" id="thumb" class="manage-column column-thumb"><span class="wc-image tips">Image</span>
+                </th>
                 <th><?php esc_attr_e( 'Name' ); ?></th>
                 <th><?php esc_attr_e( 'Mapped Courses' ); ?></th>
-                <th><?php esc_attr_e( 'Input' ); ?></th>
+                <th><?php esc_attr_e( 'Action' ); ?></th>
             </tr>
             </thead>
             <tbody>
 			<?
 			while ( $this->products->have_posts() ) : $this->products->the_post();
+				global $product;
 				?>
                 <tr>
                     <th scope="col" id="thumb" class="manage-column column-thumb">
-                        <?php echo woocommerce_get_product_thumbnail(); ?>
+						<?php echo woocommerce_get_product_thumbnail(); ?>
                     </th>
                     <td class="row-title"><label for="tablecell">
-                        <?php echo get_the_title(); ?>
-                        </label>3
+							<?php echo get_the_title(); ?>
+                            <input name="post_id" type="hidden" value="<?php echo get_the_ID() ?>" disabled>
+                        </label>
                     </td>
-                    <td></td>
                     <td>
-                        <a href="#TB_inline?width=600&height=550&inlineId=my-content-id" class="thickbox" title="MY TITLE HERE!!!">Add/Remove Course</a>
+                        <?php echo json_encode(get_post_meta(get_the_ID(), "courses", true)) ?>
+                        <div class="edit_form hidden">
+                            <label for="rudr_select2_tags">Search for courses:</label><br/>
+                            <select class="courses" id="rudr_select2_tags" name="rudr_select2_tags[]"
+                                    multiple="multiple"
+                                    style="width:100%">
+                            </select> <br/>
+                            <div style="margin-top:10px;">
+                                <span class="spinner"></span>
+                                <button type="button" class="button button-primary save alignright">Update</button>
+                                <button type="button" class="button button-secondary cancel alignright" style="margin-right:10px">Cancel</button>
+
+                            </div>
+                             </div>
+                    </td>
+                    <td>
+                        <a href="#" class="edit">Add/Remove Course</a>
                     </td>
                 </tr>
-				<? header("Access-Control-Allow-Origin: *"); ?>
+				<? header( "Access-Control-Allow-Origin: *" ); ?>
 			<? endwhile; ?>
             </tbody>
         </table>
     </form>
 
     <script>
-        jQuery(function($){
-            // multiple select with AJAX search
+        jQuery(function ($) {
             $('.courses').select2({
                 ajax: {
-                    // url: "https://testpress.in/api/v2.5/admin/courses/",
-                    url: "https://reqres.in/api/users/",
+                    url: ajaxurl,
+                    action: 'mishagetposts',
                     type: 'GET',
-                    contentType:'application/json',
+                    contentType: 'application/json',
                     data: function (params) {
                         return {
                             q: params.term,
+                            action: 'mishagetposts'
                         };
                     },
-                    beforeSend: function (xhr) {
-                        xhr.setRequestHeader("Authorization", "JWT <?php echo get_option("testpress_auth_token") ?>");
-                    },
-                    processResults: function( data ) {
+                    processResults: function (data) {
                         var options = [];
-                        if ( data ) {
-                            console.log("Data: ", data)
-                            // data is the array of arrays, and each of them contains ID and the Label of the option
-                            $.each(data.data, function( index, text ) { // do not forget that "index" is just auto incremented value
-                                options.push( { id: text.id, text: text.first_name  } );
+                        if (data) {
+                            $.each(data.results, function (index, text) {
+                                options.push({id: text.id, text: text.title});
                             });
                         }
                         return {
@@ -97,6 +104,41 @@
                 },
                 minimumInputLength: 2
             });
+
+            $('.edit').on('click', function () {
+                let row = $(this).closest('tr');
+                row.find('.edit_form').removeClass('hidden');
+            });
+
+            $('.cancel').on('click', function () {
+                let row = $(this).closest('tr');
+                row.find('.edit_form').addClass('hidden');
+            });
+
+            $('.save').on('click', function () {
+                let row = $(this).closest('tr');
+                let selected_data = $(row).find('.courses').select2('data');
+                let post_id = $(row).find('[name="post_id"]').val();
+                let selected_courses = []
+                selected_data.forEach(function (data) {
+                    selected_courses.push({id: data.id, title: data.text});
+                })
+                $(row).find('.spinner').addClass('is-active')
+                jQuery.ajax({
+                    url: ajaxurl,
+                    type: 'post',
+                    dataType: 'json',
+                    data: {"courses": selected_courses, "post_id": post_id, action: "update_product_courses"},
+                    success: function (data) {
+                        console.log("Success : ", data)
+                        $(row).find('.spinner').removeClass('is-active')
+                    },
+                    failure: function () {
+                        console.log("Failure")
+                        $(row).find('.spinner').removeClass('is-active')
+                    }
+                })
+            })
         });
     </script>
 </div>

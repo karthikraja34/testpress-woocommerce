@@ -59,17 +59,35 @@ class Testpress_Lms_Public {
 	 */
 	function add_logout_link( $items, $args )
 	{
-		if ( !is_user_logged_in() && $args->theme_location == 'primary' ) {
-			$items .= '<li><a href="'. site_url('wp-login.php') .'">Log In123</a></li>';
-		} else {
-			$query_string = "email=". get_user_meta(get_current_user_id(), "testpress_username") . "&time=". time();
-			$payload = base64_encode($query_string);
-			$secret_key = get_option("testpress_secret");
-			$sig = hash_hmac('sha256', $payload, $secret_key);
-			$sso_url = get_option("testpress_base_url") ."/sso_login/?sig=". $sig . "&sso=.". $payload;
-			$items .= '<li><a href="'. $sso_url .'">Testpress</a></li>';
+		if (get_option( "enable_testpress_login" ) == 0 ) {
+			return $items;
+		}
+
+		if ( is_user_logged_in()) {
+			$sso_url = $this->generate_sso_url();
+			$items .= '<li><a href="'. $sso_url .'" >'. get_option('testpress_login_label') .'</a></li>';
 		}
 		return $items;
+	}
+
+	function generate_sso_url() {
+		$user = wp_get_current_user();
+		$query_string = "email=". $user->user_email . "&time=". time();
+		$payload = base64_encode($query_string);
+		$secret_key = get_option("testpress_private_key");
+		$sig = hash_hmac('sha256', $payload, $secret_key);
+		return get_option("testpress_base_url") ."sso_login/?sig=". $sig . "&sso=". $payload;
+	}
+
+	function generate_sso_button() {
+		return '<a href="'. $this->generate_sso_url() .'" >'. get_option('testpress_login_label') .'</a>';
+	}
+
+	function generate_sso_link() {
+		if ( is_user_logged_in() && get_option("testpress_private_key")) {
+			add_shortcode("testpress_sso_link", array($this, 'generate_sso_url'));
+			add_shortcode("testpress_sso_button", array($this, 'generate_sso_button'));
+		}
 	}
 
 	/**

@@ -122,6 +122,7 @@ class Testpress_Lms_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/testpress-lms-admin.js', array( 'jquery' ), $this->version, false );
+		wp_localize_script(  $this->plugin_name, 'productAjax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
 
 	}
 
@@ -130,19 +131,26 @@ class Testpress_Lms_Admin {
 			$this->login_page = new LoginPage( 'testpress-lms', $this->plugin_name );
 			add_action( 'admin_post_nds_form_response', array( $this->login_page, 'the_form_response' ) );
 		} else {
-			$this->products_menu_page = new ProductsMenuPage( 'products');
-			$this->users_page = new UsersPage( 'users', ["parent_menu" => "products"]);
-			$this->demo_page  = new DemoPage( 'settings', ["parent_menu" => "products"]);
-			add_action( 'wp_ajax_mishagetposts', array( $this->login_page, 'rudr_get_posts_ajax_callback' ) );
+			$this->products_menu_page = new ProductsMenuPage( 'testpress-products');
+			add_action( 'wp_ajax_mishagetposts', array($this->products_menu_page, 'rudr_get_posts_ajax_callback') );
+			add_action( 'wp_ajax_update_product_courses', array($this->products_menu_page, 'update_product_courses') );
+			add_action( 'wp_ajax_delete_product_courses', array($this->products_menu_page, 'delete_product_courses') );
+//			$this->users_page = new UsersPage( 'users', ["parent_menu" => "products"]);
+//			add_action( 'wp_ajax_get_users', array($this->users_page, 'get_users_ajax_callback') );
+//			add_action( 'wp_ajax_update_user', array($this->users_page, 'update_users') );
+			$this->demo_page  = new DemoPage( 'testpress-settings', ["parent_menu" => "testpress-products"]);
 		}
 	}
 
 	public function is_logged_in() {
-		return get_option( 'testpress_auth_token' );
+		return get_option( 'testpress_auth_token' ) && get_option('testpress_private_key');
 	}
 
 	public function process_login_form_response() {
 		$this->login_page->the_form_response();
 	}
 
+	public function handle_settings_form_response() {
+		$this->demo_page->handle_form_response();
+	}
 }

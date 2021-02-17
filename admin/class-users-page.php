@@ -35,6 +35,21 @@ class UsersPage extends AbstractMenuPage {
 		require_once plugin_dir_path( __FILE__ ) . 'partials/users-page.php';
 	}
 
+
+	public function get_users_ajax_callback($query) {
+		$client   = new \GuzzleHttp\Client();
+		$url = get_option("testpress_base_url")."api/v2.5/admin/users/?q=" . $_GET["q"];
+		$response = $client->request( 'GET', $url, [
+			'headers' => [ 'Authorization' => 'JWT '. get_option("testpress_auth_token") ],
+		] );
+		wp_send_json(json_decode($response->getBody()->getContents()));
+	}
+
+	public function update_users($data) {
+		wp_send_json_success(true);
+	}
+
+
 	protected function getMenuTitle() {
 		return __( 'Users', 'testpress-lms' );
 	}

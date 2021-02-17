@@ -30,7 +30,8 @@ class Testpress_Lms_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-
+		add_option('testpress_login_label', "My Courses");
+		add_option('testpress_login_label', true);
 	}
 
 }

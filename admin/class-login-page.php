@@ -17,15 +17,20 @@
  * @author     Karthik <rajakarthik131@gmail.com>
  */
 
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\RequestException;
+
 require( dirname( __FILE__ ) . '/../vendor/autoload.php' );
 
 class LoginPage  extends AbstractMenuPage {
 
 	private $plugin_name;
+	private $error;
 
 	public function __construct( $name, $plugin_name, $atts = array() ) {
 		parent::__construct( $name, $atts );
 		$this->plugin_name = $plugin_name;
+		$this->error = new WP_Error();
 	}
 
 	public function onLoad() {
@@ -59,17 +64,35 @@ class LoginPage  extends AbstractMenuPage {
 	public function the_form_response() {
 		$client   = new \GuzzleHttp\Client();
 		$url = "https://{$_POST['testpress-subdomain']}.testpress.in/api/v2.3/auth-token/";
-		$response = $client->request( 'POST', $url, [
-			'json' => [ 'username' => $_POST['testpress-username'], 'password' => $_POST['testpress-password'] ],
-		] );
+
 
 		if ( $this->has_valid_nonce() ) {
 			// server response
-			$admin_notice = "success";
+
+			try {
+				$response = $client->request( 'POST', $url, [
+					'json' => [ 'username' => $_POST['testpress-username'], 'password' => $_POST['testpress-password'] ],
+				] );
+			}  catch (ClientException | RequestException $e) {
+				$this->error->add('login_error', 'Your login or password is incorrect');
+				$this->custom_redirect( "testpress-lms", $this->error->get_error_code(), $_POST );
+				exit;
+			}
+			$admin_notice = $response->getStatusCode();
 			$result       = json_decode( $response->getBody()->getContents() );
 			update_option( 'testpress_base_url', "https://{$_POST['testpress-subdomain']}.testpress.in/");
 			update_option( 'testpress_auth_token', $result->token);
-			$this->custom_redirect( $admin_notice, $_POST );
+			try {
+				$settings_response = $this->get_request("https://{$_POST['testpress-subdomain']}.testpress.in/api/v2.3/admin/settings/");
+			}  catch (ClientException | RequestException $e) {
+				$this->error->add('login_error', 'This account is not admin account. Please enter admin account details.');
+				$this->custom_redirect( "testpress-lms", "login_error", $_POST );
+				exit;
+			}
+
+			$result       = json_decode( $settings_response->getBody()->getContents() );
+			update_option( 'testpress_private_key', $result->private_key);
+			$this->custom_redirect( "testpress-products", $admin_notice, $_POST );
 			exit;
 		} else {
 			wp_die( __( 'Invalid nonce specified', $this->plugin_name ), __( 'Error', $this->plugin_name ), array(
@@ -79,43 +102,32 @@ class LoginPage  extends AbstractMenuPage {
 		}
 	}
 
-	public function my_acf_admin_notice() {
-		?>
-        <div class="notice error my-acf-notice is-dismissible">
-            <p><?php _e( 'ACF is not necessary for this plugin, but it will make your experience better, install it now!', 'my-text-domain' ); ?></p>
-        </div>
+	function get_request( $endpoint ) {
+		$client   = new \GuzzleHttp\Client();
+		$response = $client->request( 'GET', $endpoint, [
+			'headers' => [
+				'Authorization' => 'JWT ' . get_option( 'testpress_auth_token' )
+			]
+		] );
 
-
-		<?php
+		return $response;
 	}
+
 
 	/**
 	 * Redirect
 	 *
 	 * @since    1.0.0
 	 */
-	public function custom_redirect( $admin_notice, $response ) {
+	public function custom_redirect( $page, $admin_notice, $response ) {
 		wp_redirect( esc_url_raw( add_query_arg( array(
-			'nds_admin_add_notice' => $admin_notice,
+			'status' => $admin_notice,
 			'nds_response'         => $response,
 		),
-			admin_url( 'admin.php?page=' . $this->plugin_name )
+			admin_url( 'admin.php?page='. $page)
 		) ) );
-
 	}
 
-
-	/**
-	 * Print Admin Notices
-	 *
-	 * @since    1.0.0
-	 */
-	public function print_plugin_admin_notices() {
-		$html = '<div class="notice notice-success is-dismissible"> 
-				<p><strong>The request was successful. </strong></p><br>';
-		$html .= '<pre>' . htmlspecialchars( print_r( $_REQUEST['nds_response'], true ) ) . '</pre></div>';
-		echo $html;
-	}
 
 	protected function getPageTitle() {
 		return __( 'Testpress LMS', 'testpress-lms' );
